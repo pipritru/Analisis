@@ -56,11 +56,12 @@ def classify_sound(freq, yf, xf, max_amplitude):
     if max_amplitude < AMPLITUDE_THRESHOLD:
         return "Ruido", None, None
 
-    if 85 <= freq <= 255:
-        if 85 <= freq <= 180:
+    # Rango más amplio para voz humana
+    if 70 <= freq <= 300:
+        if 70 <= freq <= 180:
             voice_type = "Hombre"
-        elif 165 <= freq <= 255:
-            voice_type = "Mujer"
+        elif 180 < freq <= 300:
+            voice_type = "Mujer o Niño"
         else:
             voice_type = "Niño"
 
@@ -75,13 +76,14 @@ def classify_sound(freq, yf, xf, max_amplitude):
 
         harmonic_ratio = harmonic_energy / fundamental_energy if fundamental_energy > 0 else 0
 
-        if harmonic_ratio > 0.7:
+        # Mayor tolerancia para armónicos en voz humana
+        if harmonic_ratio > 20:
             return "Música o instrumento", None, None
 
         return "Voz humana (probablemente hablando)", voice_type, age_group
 
     harmonic_count = np.sum(yf > (max_amplitude * 0.25))
-    if harmonic_count > 5 and freq > 100:
+    if harmonic_count > 8 and freq > 100:
         return "Música o instrumento", None, None
 
     return "Ruido ambiental o sonido no identificado", None, None
@@ -218,4 +220,4 @@ if audio_loaded:
         with col4:
             st.metric("Tipo de Voz", voice_type or "N/A", delta_color="off")
         with col5:
-            st.metric("Grupo de Edad", age_group or "N/A", delta_color="off")       
+            st.metric("Grupo de Edad", age_group or "N/A", delta_color="off")
